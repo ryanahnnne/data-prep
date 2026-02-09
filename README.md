@@ -2,6 +2,9 @@
 
 This repository implements an end-to-end data preparation pipeline that combines image downloading, exploratory data analysis, text extraction via OCR, and stratified dataset splitting.
 
+## Targe Task
+[AI-TAG](https://madup.atlassian.net/wiki/x/IgAwCgE)
+
 ## Project Structure
 
 ```
