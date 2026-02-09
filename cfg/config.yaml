@@ -1,0 +1,106 @@
+# =============================================================================
+# Configuration for Image Downloader and EDA
+# =============================================================================
+# 다른 클래스에 대해 작업할 때 이 파일을 복사하거나 class 섹션만 수정하세요.
+# Example: PS (문제_해결), BA (브랜드_인지), etc.
+# =============================================================================
+
+# Target Class Configuration (클래스별로 변경)
+target:
+  project_name: "AI_TAG"
+  task_name: "AP"
+  class_name: "PS"                    # 영문 클래스명
+  class_name_kr: "문제_해결"           # 한글 클래스명
+  csv_file: "csv/gt_problem_solution_v0127_0129.csv"  # base_dir 기준 상대 경로
+
+# Directory Configuration
+paths:
+  base_dir: "/home/ycahn/data/${target.project_name}"
+  image_dir: "${paths.base_dir}/${target.task_name}/${target.class_name}/images"
+  output_dir: "${paths.base_dir}/${target.task_name}/${target.class_name}/output"
+
+# Download Configuration
+download:
+  enabled: false                 # 다운로드 실행 여부
+  max_retries: 5                # 최대 재시도 횟수
+  max_workers: 10               # 동시 다운로드 스레드 수
+  timeout: 30                   # 요청 타임아웃 (초)
+  
+  # Image Format
+  format: "jpg"                 # 출력 포맷: jpg, png, original
+  jpg_quality: 100               # JPEG 품질 (1-100)
+
+# EDA Configuration
+eda:
+  enabled: false                 # EDA 실행 여부
+  
+  # Visualization
+  visualization:
+    dpi: 150                    # 이미지 해상도
+    figsize_label: [14, 5]      # Label distribution 차트 크기
+    figsize_labeler: [14, 5]    # Labeler analysis 차트 크기
+    figsize_image_props: [14, 12]  # Image properties 차트 크기
+    figsize_label_vs_props: [16, 5]  # Label vs properties 차트 크기
+  
+  # Outlier Detection
+  # IQR만 사용하면 표준 해상도(1920, 1280 등)가 과도하게 outlier로 잡힐 수 있음.
+  # iqr_hard_range로 허용 범위를 넓혀 도메인 기반 최소/최대를 반영하고,
+  # z_score_threshold로 진짜 극단치만 추가 추출할 수 있음.
+  outlier:
+    iqr_multiplier: 1.5         # IQR 이상치 배수
+    # IQR 범위를 도메인 기준으로 넓히기 [min, max]. null이면 적용 안 함.
+    # 표준 해상도(720, 1280, 1920)를 정상으로 두려면 width/height 상한을 넉넉히.
+    iqr_hard_range:
+      width: [256, 2000]        # 허용 최소/최대 px (1920 FHD 포함)
+      height: [256, 2000]       # 허용 최소/최대 px
+      file_size_kb: [100, 2000]  # KB
+      aspect_ratio: [0.2, 5.0] # 극단적 세로/가로형 제외용
+    z_score_threshold: 3.0      # |z| > 이 값이면 극단치 (null이면 비활성)
+    small_image_threshold: 300  # 작은 이미지 기준 (px) - 도메인 하드 임계
+    large_image_threshold: 2000 # 큰 이미지 기준 (px)
+    extreme_aspect_ratio_min: 0.2   # 극단적 종횡비 최소
+    extreme_aspect_ratio_max: 5.0   # 극단적 종횡비 최대
+  
+  # Report
+  report:
+    format: "md"                # 리포트 포맷: md, txt
+    sample_images_count: 10      # 샘플 이미지 표시 개수
+    outlier_sample_count: 10     # 이상치 샘플 이미지 개수
+
+# Dataset Split Configuration
+split:
+  enabled: false                   # 분할 실행 여부
+  # Split ratios (train:val:test)
+  ratios:
+    train: 8                    # Train set 비율
+    val: 1                      # Validation set 비율
+    test: 1                     # Test set 비율
+  
+  # Labeler confidence weights for test set selection
+  # 높은 confidence를 가진 labeler의 데이터가 test set에 더 많이 포함됨
+  # 예: sj=0.2, yh=0.8, etc=0.0 이면 test set의 20%는 sj, 80%는 yh에서 선택
+  labeler_confidence:
+    sj: 0.5                     # sj의 confidence weight
+    yh: 0.5                     # yh의 confidence weight
+    etc: 0.0                    # etc의 confidence weight
+  
+  # Column names
+  label_column: "label"         # 라벨 컬럼명
+  labeler_column: "labeler"     # 레이블러 컬럼명
+  
+  # Random seed for reproducibility
+  random_seed: 42
+
+# Text Extraction (OCR) Configuration
+text_extraction:
+  enabled: false                    # 텍스트 추출 실행 여부
+  engine: "vision"                  # OCR 엔진: "vision" (Google Vision API) 또는 "glm" (GLM-OCR)
+  glm_model_path: "zai-org/GLM-OCR" # GLM-OCR 모델 경로
+  save_bbox_images: false           # bounding box 이미지 저장 여부 (vision 엔진만)
+  min_height_pixels: 20             # 최소 bounding box 높이 (px, vision 엔진만)
+  min_confidence: 0.8               # 최소 confidence (vision 엔진만)
+  output_suffix: "_with_text"       # 출력 CSV 파일 접미사
+
+# Logging
+logging:
+  level: "INFO"                 # 로그 레벨: DEBUG, INFO, WARNING, ERROR
